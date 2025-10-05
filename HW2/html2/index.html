@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>日文單字背誦遊戲</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="words_data.js"></script>
+    <script src="data.js"></script>
+</head>
+<body>
+    <div id="app">
+        <!-- 主頁面 -->
+        <div id="main-page" class="page active">
+            <div class="container">
+                <h1>日文單字背誦遊戲</h1>
+                <div class="menu-buttons">
+                    <button class="menu-btn" onclick="showPage('review-page')">
+                        <span class="btn-icon">📚</span>
+                        單字複習
+                    </button>
+                    <button class="menu-btn" onclick="showPage('boss-page')">
+                        <span class="btn-icon">⚔️</span>
+                        Boss戰鬥
+                    </button>
+                    <button class="menu-btn" onclick="showPage('shop-page')">
+                        <span class="btn-icon">🛒</span>
+                        升級商店
+                    </button>
+                    <button class="menu-btn" onclick="showSnakeGame()" id="snake-game-btn">
+                        <span class="btn-icon">🐍</span>
+                        貪食蛇小遊戲
+                        <span class="snake-remaining" id="snake-remaining">(剩餘: 2次)</span>
+                    </button>
+                </div>
+                <div class="status-info">
+                    <div class="loading-status" id="main-loading-status">正在載入單字檔案...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 單字複習頁面 -->
+        <div id="review-page" class="page">
+            <div class="container">
+                <button class="back-btn" onclick="showPage('main-page')">← 回到主頁面</button>
+                
+                <div class="word-card" id="word-card">
+                    <div class="loading" id="loading-message">請先上傳單字檔案</div>
+                    <div class="word-content" id="word-content" style="display: none;">
+                        <div class="word-info">
+                            <div class="word-counter">
+                                <span id="current-word-index">1</span> / <span id="total-words">0</span>
+                            </div>
+                        </div>
+                        
+                        <div class="word-display">
+                            <div class="word-main">
+                                <h2 class="word" id="word-text">單字</h2>
+                                <p class="spelling" id="spelling-text">拼音</p>
+                                <div class="priority-info">
+                                    <span class="priority-label">優先度:</span>
+                                    <span class="priority-value" id="priority-text">0</span>
+                                </div>
+                            </div>
+                            
+                            <div class="meaning">
+                                <h3>中文意思</h3>
+                                <p id="meaning-text">意思</p>
+                            </div>
+                            
+                            <div class="sentence">
+                                <h3>例句</h3>
+                                <p id="sentence-text">例句</p>
+                            </div>
+                        </div>
+                        
+                        <div class="controls">
+                            <button class="control-btn prev-btn" onclick="previousWord()">
+                                ← Previous
+                            </button>
+                            <button class="control-btn sound-btn" onclick="playSound()">
+                                🔊 Sound
+                            </button>
+                            <button class="control-btn next-btn" onclick="nextWord()">
+                                Next →
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Boss戰鬥頁面 -->
+        <div id="boss-page" class="page">
+            <div class="container boss-container">
+                <button class="back-btn" id="boss-back-btn" onclick="returnToMain()">← 回到主頁面</button>
+                
+                <!-- 戰鬥狀態顯示 -->
+                <div class="boss-status-bar">
+                    <div class="boss-timer">
+                        <span class="timer-label">剩餘時間:</span>
+                        <span class="timer-display" id="boss-timer">0</span>
+                        <span class="timer-unit">秒</span>
+                    </div>
+                    <div class="boss-health">
+                        <span class="health-label">生命值:</span>
+                        <span class="health-display" id="boss-health">10</span>
+                    </div>
+                    <div class="boss-round">
+                        <span class="round-label">回合:</span>
+                        <span class="round-display" id="boss-round">1/20</span>
+                    </div>
+                </div>
+
+                <!-- 戰鬥主要區域 -->
+                <div class="boss-battle-area" id="boss-battle-area">
+                    <!-- 開始畫面 -->
+                    <div class="boss-start-screen" id="boss-start-screen">
+                        <div class="boss-intro">
+                            <h2>⚔️ Boss 戰鬥挑戰 ⚔️</h2>
+                            <div class="boss-rules">
+                                <h3>戰鬥規則：</h3>
+                                <ul>
+                                    <li>🎯 總共 20 個回合</li>
+                                    <li>⏱️ 每回合時間限制為你的攻擊力秒數</li>
+                                    <li>💔 答錯或超時扣 2 點生命值</li>
+                                    <li>💰 答對得分 = 剩餘時間 + 防禦值 - 13</li>
+                                    <li>❤️ 生命值歸零即挑戰失敗</li>
+                                </ul>
+                            </div>
+                            <button class="boss-start-btn" id="boss-start-btn" onclick="startBossBattle()">
+                                🔥 開始戰鬥 🔥
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 戰鬥進行中畫面 -->
+                    <div class="boss-game-screen" id="boss-game-screen" style="display: none;">
+                        <div class="question-area">
+                            <div class="question-type" id="question-type">題型：中譯日</div>
+                            <div class="question-content" id="question-content">
+                                <h3 id="question-title">請選擇正確答案：</h3>
+                                <p class="question-text" id="question-text">問題內容</p>
+                            </div>
+                        </div>
+
+                        <div class="answer-options" id="answer-options">
+                            <button class="answer-btn" onclick="selectAnswer(0)">選項A</button>
+                            <button class="answer-btn" onclick="selectAnswer(1)">選項B</button>
+                            <button class="answer-btn" onclick="selectAnswer(2)">選項C</button>
+                            <button class="answer-btn" onclick="selectAnswer(3)">選項D</button>
+                        </div>
+
+                        <div class="boss-score">
+                            <span class="score-label">當前得分:</span>
+                            <span class="score-display" id="boss-score">0</span>
+                        </div>
+                    </div>
+
+                    <!-- 戰鬥結束畫面 -->
+                    <div class="boss-end-screen" id="boss-end-screen" style="display: none;">
+                        <div class="end-result" id="end-result">
+                            <!-- 結果內容會動態生成 -->
+                        </div>
+                        <button class="boss-restart-btn" onclick="showBossStartScreen()">再次挑戰</button>
+                        <button class="boss-main-btn" onclick="showPage('main-page')">回到主頁面</button>
+                    </div>
+                </div>
+
+                <!-- 特效區域 -->
+                <div class="boss-effects" id="boss-effects">
+                    <!-- 特效會在這裡動態生成 -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 升級商店頁面 -->
+        <div id="shop-page" class="page">
+            <div class="container">
+                <button class="back-btn" onclick="showPage('main-page')">← 回到主頁面</button>
+                
+                <div class="shop-content">
+                    <h2 class="shop-title">🛒 升級商店</h2>
+                    
+                    <!-- 玩家狀態顯示 -->
+                    <div class="player-stats">
+                        <h3>玩家狀態</h3>
+                        <div class="stats-grid">
+                            <div class="stat-item points">
+                                <span class="stat-icon">💰</span>
+                                <span class="stat-label">遊戲點數</span>
+                                <span class="stat-value" id="player-points">0</span>
+                            </div>
+                            <div class="stat-item health">
+                                <span class="stat-icon">❤️</span>
+                                <span class="stat-label">生命值</span>
+                                <span class="stat-value" id="player-health">5/10</span>
+                            </div>
+                            <div class="stat-item defense">
+                                <span class="stat-icon">🛡️</span>
+                                <span class="stat-label">防禦值</span>
+                                <span class="stat-value" id="player-defense">5/10</span>
+                            </div>
+                            <div class="stat-item attack">
+                                <span class="stat-icon">⚔️</span>
+                                <span class="stat-label">攻擊力</span>
+                                <span class="stat-value" id="player-attack">10/15</span>
+                            </div>
+                            <div class="stat-item free-unlocks">
+                                <span class="stat-icon">🎁</span>
+                                <span class="stat-label">免費解鎖</span>
+                                <span class="stat-value" id="player-free-unlocks">0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 商店功能區 -->
+                    <div class="shop-sections">
+                        <!-- 還原遊戲 -->
+                        <div class="shop-section">
+                            <h3>🔄 遊戲管理</h3>
+                            <div class="shop-item reset">
+                                <div class="item-info">
+                                    <h4>還原遊戲</h4>
+                                    <p>重置所有資料，隨機選取20個單字開始新遊戲</p>
+                                </div>
+                                <button class="shop-btn reset-btn" onclick="resetGame()">
+                                    免費重置
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 角色升級 -->
+                        <div class="shop-section">
+                            <h3>⬆️ 角色升級 (10點/次)</h3>
+                            <div class="upgrade-grid">
+                                <div class="shop-item upgrade">
+                                    <div class="item-info">
+                                        <h4>❤️ 生命值 +1</h4>
+                                        <p>增加生命值上限</p>
+                                    </div>
+                                    <button class="shop-btn upgrade-btn" onclick="upgradeHealth()">
+                                        10點
+                                    </button>
+                                </div>
+                                <div class="shop-item upgrade">
+                                    <div class="item-info">
+                                        <h4>🛡️ 防禦值 +1</h4>
+                                        <p>增加防禦力</p>
+                                    </div>
+                                    <button class="shop-btn upgrade-btn" onclick="upgradeDefense()">
+                                        10點
+                                    </button>
+                                </div>
+                                <div class="shop-item upgrade">
+                                    <div class="item-info">
+                                        <h4>⚔️ 攻擊力 +1</h4>
+                                        <p>增加攻擊傷害</p>
+                                    </div>
+                                    <button class="shop-btn upgrade-btn" onclick="upgradeAttack()">
+                                        10點
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 解鎖單字 -->
+                        <div class="shop-section">
+                            <h3>📚 解鎖單字</h3>
+                            <div class="shop-item unlock">
+                                <div class="item-info">
+                                    <h4>解鎖新單字 (10個)</h4>
+                                    <p>隨機解鎖10個新的日文單字進行學習</p>
+                                    <p class="unlock-info">可解鎖單字數量: <span id="unlockable-count">0</span></p>
+                                </div>
+                                <div class="unlock-buttons">
+                                    <button class="shop-btn unlock-btn" onclick="unlockWord()">
+                                        20點
+                                    </button>
+                                    <button class="shop-btn free-unlock-btn" onclick="freeUnlockWord()" id="free-unlock-btn">
+                                        免費解鎖
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 訊息顯示區 -->
+                    <div class="shop-message" id="shop-message"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 貪食蛇小遊戲頁面 -->
+        <div id="snake-game-page" class="page">
+            <div class="container">
+                <div class="snake-game-header">
+                    <h2>🐍 貪食蛇小遊戲</h2>
+                    <div class="snake-game-info">
+                        <div class="snake-score">得分: <span id="snake-score">0</span></div>
+                        <div class="snake-length">長度: <span id="snake-length">1</span></div>
+                        <div class="snake-remaining-info">今日剩餘: <span id="snake-remaining-info">2</span> 次</div>
+                    </div>
+                </div>
+                
+                <div class="snake-game-container">
+                    <canvas id="snake-canvas" width="400" height="400"></canvas>
+                    <div class="snake-controls">
+                        <div class="snake-instructions">
+                            <p>🎮 使用方向鍵控制蛇的移動</p>
+                            <p>🍎 吃到食物可以增長並得分</p>
+                            <p>💥 撞到牆壁或自己會遊戲結束</p>
+                        </div>
+                        <div class="snake-buttons">
+                            <button class="snake-btn" onclick="startSnakeGame()" id="start-snake-btn">開始遊戲</button>
+                            <button class="snake-btn" onclick="pauseSnakeGame()" id="pause-snake-btn" disabled>暫停</button>
+                            <button class="snake-btn back-btn" onclick="backToMain()">返回主頁</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="snake-game-result" id="snake-game-result" style="display: none;">
+                    <h3>🎉 遊戲結束！</h3>
+                    <div class="result-info">
+                        <p>最終得分: <span id="final-snake-score">0</span></p>
+                        <p>獲得點數: <span id="earned-points">0</span></p>
+                    </div>
+                    <div class="result-buttons">
+                        <button class="snake-btn" onclick="playAgain()" id="play-again-btn">再玩一次</button>
+                        <button class="snake-btn back-btn" onclick="backToMain()">返回主頁</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

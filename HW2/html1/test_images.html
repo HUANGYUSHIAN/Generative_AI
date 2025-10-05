@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>測試圖片顯示</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .image-test { margin: 20px 0; padding: 20px; border: 1px solid #ccc; }
+        .image-test img { max-width: 300px; height: auto; }
+        .error { color: red; }
+        .success { color: green; }
+    </style>
+</head>
+<body>
+    <h1>測試 Company 圖片顯示</h1>
+    
+    <div class="image-test">
+        <h3>Company 1 圖片</h3>
+        <img id="img1" src="/api/company-image/1" alt="Company 1" onerror="showError('img1')" onload="showSuccess('img1')">
+        <div id="status1"></div>
+    </div>
+    
+    <div class="image-test">
+        <h3>Company 2 圖片</h3>
+        <img id="img2" src="/api/company-image/2" alt="Company 2" onerror="showError('img2')" onload="showSuccess('img2')">
+        <div id="status2"></div>
+    </div>
+    
+    <div class="image-test">
+        <h3>Company 3 圖片</h3>
+        <img id="img3" src="/api/company-image/3" alt="Company 3" onerror="showError('img3')" onload="showSuccess('img3')">
+        <div id="status3"></div>
+    </div>
+    
+    <div class="image-test">
+        <h3>Company 4 圖片</h3>
+        <img id="img4" src="/api/company-image/4" alt="Company 4" onerror="showError('img4')" onload="showSuccess('img4')">
+        <div id="status4"></div>
+    </div>
+    
+    <div class="image-test">
+        <h3>Company 5 圖片</h3>
+        <img id="img5" src="/api/company-image/5" alt="Company 5" onerror="showError('img5')" onload="showSuccess('img5')">
+        <div id="status5"></div>
+    </div>
+    
+    <script>
+        function showError(imgId) {
+            const statusId = imgId.replace('img', 'status');
+            document.getElementById(statusId).innerHTML = '<span class="error">❌ 圖片載入失敗</span>';
+        }
+        
+        function showSuccess(imgId) {
+            const statusId = imgId.replace('img', 'status');
+            document.getElementById(statusId).innerHTML = '<span class="success">✅ 圖片載入成功</span>';
+        }
+    </script>
+</body>
+</html>

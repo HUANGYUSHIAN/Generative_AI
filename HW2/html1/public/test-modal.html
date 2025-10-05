@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>測試彈出視窗</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>測試優惠券圖片彈出視窗</h1>
+        <div style="text-align: center; margin: 50px 0;">
+            <button class="btn btn-primary" onclick="testModal(1)">測試 Company 1 圖片</button>
+            <button class="btn btn-primary" onclick="testModal(2)">測試 Company 2 圖片</button>
+            <button class="btn btn-primary" onclick="testModal(3)">測試 Company 3 圖片</button>
+            <button class="btn btn-primary" onclick="testModal(4)">測試 Company 4 圖片</button>
+            <button class="btn btn-primary" onclick="testModal(5)">測試 Company 5 圖片</button>
+        </div>
+    </div>
+
+    <!-- 圖片彈出視窗 -->
+    <div id="image-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close" onclick="closeImageModal()">&times;</span>
+            <div class="modal-header">
+                <h3>優惠券圖片</h3>
+            </div>
+            <div class="modal-body">
+                <div id="modal-image-container">
+                    <img id="modal-image" src="" alt="優惠券圖片" style="display: none;">
+                    <div id="modal-loading" class="loading">載入中...</div>
+                    <div id="modal-error" class="error" style="display: none;">圖片載入失敗</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 測試彈出視窗功能
+        async function testModal(companyId) {
+            // 顯示彈出視窗
+            const modal = document.getElementById('image-modal');
+            const modalImage = document.getElementById('modal-image');
+            const modalLoading = document.getElementById('modal-loading');
+            const modalError = document.getElementById('modal-error');
+            
+            // 重置狀態
+            modal.style.display = 'flex';
+            modalImage.style.display = 'none';
+            modalLoading.style.display = 'block';
+            modalError.style.display = 'none';
+            
+            try {
+                // 使用company ID來獲取圖片
+                const response = await fetch(`/api/company-image/${companyId}`);
+                
+                if (response.ok) {
+                    const imageUrl = `/api/company-image/${companyId}`;
+                    modalImage.src = imageUrl;
+                    
+                    // 圖片載入成功
+                    modalImage.onload = function() {
+                        modalLoading.style.display = 'none';
+                        modalImage.style.display = 'block';
+                    };
+                    
+                    // 圖片載入失敗
+                    modalImage.onerror = function() {
+                        modalLoading.style.display = 'none';
+                        modalError.style.display = 'block';
+                    };
+                } else {
+                    modalLoading.style.display = 'none';
+                    modalError.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('載入圖片錯誤:', error);
+                modalLoading.style.display = 'none';
+                modalError.style.display = 'block';
+            }
+        }
+
+        // 關閉圖片彈出視窗
+        function closeImageModal() {
+            const modal = document.getElementById('image-modal');
+            modal.style.display = 'none';
+        }
+
+        // 初始化彈出視窗事件
+        document.addEventListener('DOMContentLoaded', function() {
+            const modal = document.getElementById('image-modal');
+            
+            // 點擊背景關閉彈出視窗
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    closeImageModal();
+                }
+            });
+            
+            // ESC鍵關閉彈出視窗
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && modal.style.display === 'flex') {
+                    closeImageModal();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
